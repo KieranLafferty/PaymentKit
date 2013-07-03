@@ -56,8 +56,8 @@
 @implementation PKView
 
 @synthesize innerView, opaqueOverGradientView, cardNumberField,
-            cardExpiryField, cardCVCField,
-            placeholderView, delegate;
+cardExpiryField, cardCVCField,
+placeholderView, delegate;
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -67,7 +67,13 @@
     }
     return self;
 }
-
+-(id) initWithFrame:(CGRect) frame completionHandler:(completionHandler) handler {
+    if (self = [super initWithFrame:frame]) {
+        [self setup];
+        _handler = handler;
+    }
+    return self;
+}
 - (void)awakeFromNib
 {
     [super awakeFromNib];
@@ -84,7 +90,8 @@
     
     UIImageView *backgroundImageView = [[UIImageView alloc] initWithFrame:self.bounds];
     backgroundImageView.image = [[UIImage imageNamed:@"textfield"]
-                                 resizableImageWithCapInsets:UIEdgeInsetsMake(0, 8, 0, 8)];
+                                 resizableImageWithCapInsets:UIEdgeInsetsMake(0, 8, 0, 8)
+                                 resizingMode:UIImageResizingModeStretch];
     [self addSubview:backgroundImageView];
     
     self.innerView = [[UIView alloc] initWithFrame:CGRectMake(40, 12, self.frame.size.width - 40, 20)];
@@ -144,7 +151,7 @@
 {
     cardExpiryField = [[PKTextField alloc] initWithFrame:CGRectMake(kPKViewCardExpiryFieldStartX,0,
                                                                     60,20)];
-
+    
     cardExpiryField.delegate = self;
     
     cardExpiryField.placeholder = @"MM/YY";
@@ -264,9 +271,9 @@
 }
 
 - (BOOL)isValid
-{    
+{
     return [self.cardNumber isValid] && [self.cardExpiry isValid] &&
-           [self.cardCVC isValid];
+    [self.cardCVC isValid];
 }
 
 - (PKCard*)card
@@ -350,7 +357,7 @@
         default:
             break;
     }
-
+    
     [self setPlaceholderViewImage:[UIImage imageNamed:cardTypeName]];
 }
 
@@ -483,9 +490,12 @@
 {
     if ([self isValid] && !isValidState) {
         isValidState = YES;
-
+        
         if ([self.delegate respondsToSelector:@selector(paymentView:withCard:isValid:)]) {
             [self.delegate paymentView:self withCard:self.card isValid:YES];
+        }
+        if (self.handler) {
+            self.handler(self, self.card, YES);
         }
         
     } else if (![self isValid] && isValidState) {
@@ -493,6 +503,9 @@
         
         if ([self.delegate respondsToSelector:@selector(paymentView:withCard:isValid:)]) {
             [self.delegate paymentView:self withCard:self.card isValid:NO];
+        }
+        if (self.handler) {
+            self.handler(self, self.card, NO);
         }
     }
 }
@@ -506,9 +519,9 @@
     if (errors) {
         textField.textColor = RedColor;
     } else {
-        textField.textColor = DarkGreyColor;        
+        textField.textColor = DarkGreyColor;
     }
-
+    
     [self checkValid];
 }
 

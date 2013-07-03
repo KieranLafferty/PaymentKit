@@ -16,13 +16,15 @@
 
 @class PKView, PKTextField;
 
+typedef void(^completionHandler)(PKView* paymentView, PKCard* card, BOOL isValid);
+
 @protocol PKViewDelegate <NSObject>
 @optional
 - (void) paymentView:(PKView*)paymentView withCard:(PKCard*)card isValid:(BOOL)valid;
 @end
 
 @interface PKView : UIView
-
+-(id) initWithFrame:(CGRect) frame completionHandler:(completionHandler) handler;
 - (BOOL)isValid;
 
 @property (nonatomic, readonly) UIView *opaqueOverGradientView;
@@ -37,7 +39,8 @@
 @property IBOutlet PKTextField* cardExpiryField;
 @property IBOutlet PKTextField* cardCVCField;
 @property IBOutlet UIImageView* placeholderView;
-@property id <PKViewDelegate> delegate;
+@property IBOutlet id <PKViewDelegate> delegate;
 @property (readonly) PKCard* card;
 
+@property (nonatomic, copy) completionHandler handler;
 @end
